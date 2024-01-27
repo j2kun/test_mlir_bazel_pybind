@@ -1,4 +1,6 @@
-# Repro steps
+# Repro steps for https://github.com/llvm/llvm-project/pull/79676
+
+Checkout this repo at `f07fca0e972cfe03a20a8347bc6649531effddc6`
 
 ```
 # update bazel/import_llvm.bzl to load any upstream commit before
