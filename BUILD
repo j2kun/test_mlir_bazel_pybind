@@ -1,36 +1,9 @@
-load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@llvm-project//mlir/python:symlink_inputs.bzl", "symlink_inputs")
-
-pybind_extension(
-    name = "_mlir",
-    srcs = [
-        "@llvm-project//mlir:lib/Bindings/Python/MainModule.cpp",
-    ],
-    deps = [
-        "@llvm-project//llvm:Support",
-        "@llvm-project//mlir:MLIRBindingsPythonCore",
-        "@llvm-project//mlir:MLIRBindingsPythonHeaders",
-        "@llvm-project//mlir:Support",
-    ],
-)
-
-symlink_inputs(
-    name = "_mlir_libs",
-    rule = py_library,
-    symlinked_inputs = {"srcs": {
-        ".": [
-            "@llvm-project//mlir/python:MlirLibsPyFiles",
-        ],
-    }},
-    deps = [
-        ":_mlir.so",
-    ],
-)
 
 py_library(
     name = "mlir",
     deps = [
-      ":_mlir_libs",
+      "//_mlir_libs",
     ],
 )
 
@@ -77,6 +50,20 @@ symlink_inputs(
         ":mlir",
     ],
 )
+
+symlink_inputs(
+    name = "affine_dialect",
+    rule = py_library,
+    symlinked_inputs = {"srcs": {
+        "dialects": ["@llvm-project//mlir/python:AffineOpsPyFiles"],
+    }},
+    deps = [
+        ":core",
+        ":ir",
+        ":mlir",
+    ],
+)
+
 
 symlink_inputs(
     name = "vector_dialect",
@@ -170,12 +157,10 @@ symlink_inputs(
 
 py_library(
     name = "mlir_python_bindings",
-    data = [
-        ":_mlir.so",
-    ],
     srcs_version = "PY3",
     deps = [
         ":arithmetic_dialect",
+        ":affine_dialect",
         ":builtin_dialect",
         ":core",
         ":extras",
