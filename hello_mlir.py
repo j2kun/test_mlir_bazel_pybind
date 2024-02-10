@@ -1,50 +1,38 @@
-"""Hello world example for MLIR python bindings."""
-import numpy as np
+"""Hello world MLIR example with python bindings."""
 
+from mlir.dialects import func
+from mlir.dialects import arith
+from mlir.dialects import memref
+from mlir.dialects import affine
 import mlir.extras.types as T
-from mlir.extras.ast.canonicalize import canonicalize
-from mlir.extras.context import mlir_mod_ctx
-from mlir.extras.dialects.ext.arith import constant
-from mlir.extras.dialects.ext.func import func
-from mlir.extras.dialects.ext.scf import canonicalizer as scf, range_ as range
-from mlir.extras.runtime.passes import Pipeline, run_pipeline
-from mlir.extras.runtime.refbackend import LLVMJITBackend
 
-ctx_man = mlir_mod_ctx()
-ctx = ctx_man.__enter__()
-backend = LLVMJITBackend()
 
-K = 10
-memref_i64 = T.memref(K, K, T.i64())
+def constructAndPrintInModule(f):
+    print("\nTEST:", f.__name__)
+    with Context(), Location.unknown():
+        module = Module.create()
+        with InsertionPoint(module.body):
+            f()
+        print(module)
+    return f
 
-@func(emit=True)
-@canonicalize(using=scf)
-def memfoo(A: memref_i64, B: memref_i64, C: memref_i64):
-    one = constant(1)
-    two = constant(2)
-    if one > two:
-        C[0, 0] = constant(3, T.i64())
-    else:
-        for i in range(0, K):
-            for j in range(0, K):
-                C[i, j] = A[i, j] * B[i, j]
 
-run_pipeline(ctx.module, Pipeline().cse())
-print(ctx.module)
+@constructAndPrintInModule
+def testAffineStoreOp():
+    f32 = F32Type.get()
+    index_type = IndexType.get()
+    memref_type_out = MemRefType.get([12, 12], f32)
 
-module = backend.compile(
-    ctx.module,
-    kernel_name=memfoo.__name__,
-    pipeline=Pipeline().bufferize().lower_to_llvm(),
-)
-print(module)
+    @func.FuncOp.from_py_func(index_type)
+    def affine_store_test(arg0):
+        mem = memref.AllocOp(memref_type_out, [], []).result
 
-A = np.random.randint(0, 10, (K, K)).astype(np.int64)
-B = np.random.randint(0, 10, (K, K)).astype(np.int64)
-C = np.zeros((K, K), dtype=np.int64)
-backend.load(module).memfoo(A, B, C)
+        d0 = AffineDimExpr.get(0)
+        s0 = AffineSymbolExpr.get(0)
+        map = AffineMap.get(1, 1, [s0 * 3, d0 + s0 + 1])
 
-print(C)
-assert np.array_equal(A * B, C)
+        a1 = arith.ConstantOp(f32, 2.1)
 
-ctx_man.__exit__(None, None, None);
+        affine.AffineStoreOp(a1, mem, indices=[arg0, arg0], map=map)
+
+        return mem
