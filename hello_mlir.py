@@ -7,10 +7,10 @@ from test_mlir_bazel_pybind.dialects import arith
 from test_mlir_bazel_pybind.dialects import memref
 from test_mlir_bazel_pybind.dialects import affine
 
-
 def constructAndPrintInModule(f):
     print("\nTEST:", f.__name__)
-    with Context(), Location.unknown():
+    with Context() as context, Location.unknown():
+        context.allow_unregistered_dialects = True
         module = Module.create()
         with InsertionPoint(module.body):
             f()
