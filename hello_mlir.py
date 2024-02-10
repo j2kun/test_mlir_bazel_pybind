@@ -1,10 +1,11 @@
 """Hello world MLIR example with python bindings."""
 
-from mlir.dialects import func
-from mlir.dialects import arith
-from mlir.dialects import memref
-from mlir.dialects import affine
-import mlir.extras.types as T
+from test_mlir_bazel_pybind import *
+from test_mlir_bazel_pybind.ir import *
+from test_mlir_bazel_pybind.dialects import func
+from test_mlir_bazel_pybind.dialects import arith
+from test_mlir_bazel_pybind.dialects import memref
+from test_mlir_bazel_pybind.dialects import affine
 
 
 def constructAndPrintInModule(f):
