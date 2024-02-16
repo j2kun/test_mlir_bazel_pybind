@@ -1,11 +1,25 @@
 """Hello world MLIR example with python bindings."""
 
-from test_mlir_bazel_pybind import *
-from test_mlir_bazel_pybind.ir import *
-from test_mlir_bazel_pybind.dialects import func
-from test_mlir_bazel_pybind.dialects import arith
-from test_mlir_bazel_pybind.dialects import memref
-from test_mlir_bazel_pybind.dialects import affine
+# hacks!
+import sys
+from pathlib import Path
+
+_mlir_python = __import__("llvm-project.mlir.python", fromlist=["*"])
+del sys.modules["llvm-project"]
+del sys.modules["llvm-project.mlir"]
+del sys.modules["llvm-project.mlir.python"]
+for i, p in enumerate(sys.path):
+    if "llvm-project" in p:
+        del sys.path[i]
+sys.path.append(str(Path(_mlir_python.__file__).absolute().parent))
+# /hacks!
+
+from mlir import *
+from mlir.ir import *
+from mlir.dialects import func
+from mlir.dialects import arith
+from mlir.dialects import memref
+from mlir.dialects import affine
 
 def constructAndPrintInModule(f):
     print("\nTEST:", f.__name__)
